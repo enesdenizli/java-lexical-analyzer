@@ -1,14 +1,14 @@
-import java.sql.SQLOutput;
 import java.util.Scanner;
 
 public class LexicalAnalyzer {
     private static String input;
+    private static int inputLength;
     private static String lexeme = "";
     private static char nextChar;
-    private static int charClass;
+    private static int charValue;
 //    private static int lexLen;
 //    private static int token;
-    private static int nextToken;
+    private static int tokenValue;
     private static int count;
 
     // Character classes
@@ -35,6 +35,7 @@ public class LexicalAnalyzer {
 
         System.out.println("Enter equation:");
         input = scan.nextLine();
+        inputLength = input.length();
 
         if(input.equals(""))
             System.out.println("Empty input");
@@ -42,47 +43,47 @@ public class LexicalAnalyzer {
             lexi.getChar();
             do {
               lexi.lex();
-            } while(nextToken != lexi.EOF);
+            } while(tokenValue != lexi.EOF);
         }
     }
 
     // lookup - a function to lookup operators and parentheses
     // and return the token
-    private int lookup(char ch) {
+    private void lookup(char ch) {
         switch(ch){
             case '(':
                 addChar();
-                nextToken = LEFT_PAREN;
+                tokenValue = LEFT_PAREN;
                 break;
             case ')':
                 addChar();
-                nextToken = RIGHT_PAREN;
+                tokenValue = RIGHT_PAREN;
                 break;
             case ';':
                 addChar();
-                nextToken = SEMICOL;
+                tokenValue = SEMICOL;
                 break;
             case '+':
                 addChar();
-                nextToken = ADD_OP;
+                tokenValue = ADD_OP;
                 break;
             case '-':
                 addChar();
-                nextToken = SUB_OP;
+                tokenValue = SUB_OP;
                 break;
             case '*':
                 addChar();
-                nextToken = MULT_OP;
+                tokenValue = MULT_OP;
                 break;
             case '/':
                 addChar();
-                nextToken = DIV_OP;
+                tokenValue = DIV_OP;
                 break;
             default:
                 addChar();
-                nextToken = EOF;
+                tokenValue = EOF;
         }
-        return nextToken;
+//        return nextToken;
     }
 
     // addChar - a function to add nextChar to lexeme
@@ -98,16 +99,22 @@ public class LexicalAnalyzer {
     // getChar - a function to get the next character of
     // input and determine its character class
     private void getChar(){
-        nextChar = input.charAt(count++);
-        if(count != input.length()) {
-            if (Character.isAlphabetic(nextChar))
-                charClass = LETTER;
-            else if (Character.isDigit(nextChar))
-                charClass = DIGIT;
-            else
-                charClass = UNKNOWN;
-        } else
-            charClass = EOF;
+        try {
+            if(count < inputLength){
+                nextChar = input.charAt(count);
+                if (Character.isAlphabetic(nextChar))
+                    charValue = LETTER;
+                else if (Character.isDigit(nextChar))
+                    charValue = DIGIT;
+                else
+                    charValue = UNKNOWN;
+            } else
+                charValue = EOF;
+            count++;
+        } catch (IndexOutOfBoundsException exception){
+            System.out.println("Error");
+            System.exit(0);
+        }
     }
 
     //getNonBlank - a function to call getChar until it
@@ -119,30 +126,32 @@ public class LexicalAnalyzer {
 
     // lex - a simple lexical analyzer for arithmetic
     // expressions.
-    private int lex() {
+    private void lex() {
         lexeme = "";
         getNonBlank();
 
         //Parse identifiers
-        switch(charClass){
+        switch(charValue){
             case LETTER:
                 addChar();
                 getChar();
-                while(charClass == LETTER || charClass == DIGIT){
+                // adds letter while nextCharValue is letter
+                while(charValue == LETTER || charValue == DIGIT){
                     addChar();
                     getChar();
                 }
-                nextToken = IDENT;
+                tokenValue = IDENT;
                 break;
             //Parse integer literals
             case DIGIT:
                 addChar();
                 getChar();
-                while (charClass == DIGIT){
+                // adds digit while nextCharValue is digit
+                while (charValue == DIGIT){
                     addChar();
                     getChar();
                 }
-                nextToken = INT_LIT;
+                tokenValue = INT_LIT;
                 break;
             // Parentheses and operators
             case UNKNOWN:
@@ -151,12 +160,12 @@ public class LexicalAnalyzer {
                 break;
             // EOF
             case EOF:
-                nextToken = EOF;
+                tokenValue = EOF;
                 lexeme = "EOF";
         }
-        System.out.println("Next token is: " + nextToken +
+        System.out.println("Next token is: " + tokenValue +
                 " Next lexeme is " + lexeme);
-        return nextToken;
+//        return nextToken;
     }
 }
 // (sum + 47) / total
